@@ -1,0 +1,22 @@
+CONSUMER_KEY = '********'     # This is api_key
+CONSUMER_SECRET = '*********'   # This is secret_key
+
+USER_TOKEN = '********'   # This is oauth_token
+USER_SECRET = '********'   # This is oauth_secret
+RETURN_URL = '******'
+
+
+from linkedin import linkedin
+authentication = linkedin.LinkedInDeveloperAuthentication(CONSUMER_KEY, CONSUMER_SECRET,USER_TOKEN, USER_SECRET,RETURN_URL, linkedin.PERMISSIONS.enums.values())
+application = linkedin.LinkedInApplication(authentication)
+
+import json
+connections_data='C:/Amrita/test3.json'
+connections = application.search_company(selectors=[{'companies': ['name','employee-count-range']}],params={'title': 'python','start':10, 'count': 20})
+f = open(connections_data, 'w')
+f.write(json.dumps(connections, indent=1))
+f.close()
+connections = application.search_company(selectors=[{'companies': ['name','employee-count-range']}],params={'title': 'python','start':20, 'count': 1000})
+f = open(connections_data, 'a')
+f.write(json.dumps(connections, indent=1))
+f.close()
