@@ -1,0 +1,20 @@
+import requests
+from bs4 import BeautifulSoup as BS
+import json
+data='C:/test.json'
+
+
+url="http://sfbay.craigslist.org/search/sby/sss?sort=rel&query=baby" ## Url from Craigslist
+
+r=requests.get(url)
+soup=BS(r.content)
+links=soup.find_all("p")
+
+print soup.prettify()
+
+### Write Output to File
+for link in links:
+    connections=link.text
+    f=open(data,'a')
+    f.write(json.dumps(connections,indent=1))
+    f.close()
