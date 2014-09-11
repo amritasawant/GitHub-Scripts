@@ -1,0 +1,15 @@
+### Scrape item listings from Craigslist
+
+import requests
+from bs4 import BeautifulSoup as bs
+url="http://sfbay.craigslist.org/baa/"
+r=requests.get(url)
+soup=bs(r.content)
+import re
+s=soup.find_all('a', class_=re.compile("hdrlnk")) ###Item Name
+for i in s:
+    col=i.text
+    scol=str(col)
+    print scol
+
+s1=soup.find_all('span', class_=re.compile("price")) ### Price
