@@ -1,0 +1,28 @@
+---
+Kaggle Private: 
+Predict who will subscribe to the next season of America's leading period-instrument orchestra 
+and help bring in new patrons!
+---
+
+Using R-markdown
+        ```{r}
+        library('reshape2')
+        library(sqldf)
+        subscriptions = read.csv('C:/Amrita/HW/Kaggle/subscriptions.csv',colClasses='character')
+        account = read.csv('C:/Amrita/HW/Kaggle/account.csv')
+        tickets= read.csv('C:/Amrita/HW/Kaggle/tickets.csv')
+        subscriptionsLong = melt(subscriptions,id=c('account_id','season'))
+        subscriptionsWide = dcast(subscriptionsLong, account_id~season+variable,value.var="value")
+        wide = merge(account,subscriptionsWide,by="account_id",all=TRUE)
+
+```
+
+
+        ```{r}
+
+        ticketslong=melt(tickets,id=c('account_id','season','set'))
+        ticketswide = dcast(ticketslong, account_id~season+set+variable,value.var="value")
+        wide=merge(x = wide, y = ticketswide, by = "account_id", all.x=TRUE) 
+        colnames(wide)
+        ```
+
