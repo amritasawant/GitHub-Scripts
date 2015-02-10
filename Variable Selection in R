@@ -1,3 +1,21 @@
+set.seed(1)
+beta = c((1:5),rep(0,15))
+X = matrix(rnorm(20000),1000)
+Y = X %*% beta + rnorm(1000)
+df<-data.frame(X,Y)
+
+
+
+set.seed(1) 
+index <- 1:nrow(df) 
+sample_index=sample(1000,size = 100,replace=FALSE)
+train <- df[sample_index,]
+test <- df[-sample_index,]
+train.mat=model.matrix(Y~.,data=train)
+test.mat=model.matrix(Y~.,data=test)
+
+
+
 regfit=regsubsets(Y~.,data=train,nvmax=20)
 train.mse=rep(NA,20)
 for (i in 1:20){coefi=coef(regfit,id=i)
