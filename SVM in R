@@ -1,0 +1,52 @@
+
+
+library(ISLR)
+auto <- Auto
+auto$Y <- ifelse(auto$mpg > median(auto$mpg),1,0)
+x = as.matrix(auto[,2:8])
+y=as.matrix(auto[,10])
+
+
+
+#We see that the cross validation error is the lowest for C=50
+
+library(kernlab)
+set.seed(1)
+for (i in c(5,10,30,50,70,100,500)){
+  svp <- ksvm(x,y,type="C-svc",kernel = "vanilladot",cross=10,C = i)
+  CV.error=data.frame(i,cross(svp))
+  print(CV.error) 
+}
+
+
+
+#radial basis kernel
+#The CV error is lowest for lowest values of cost and gamma i.e cost=1 and gamma=0.5. As cost increases,
+#we see a slight increase in the CV error. 
+
+#polynomial kernel
+#lowest CV error are obtained with lowest costs and degree. I.e cost=1 and degree=2. The lowest CV error with the Radial basis kernel function
+#was lower than the ones obrained by the polynomial kernel.
+
+library(e1071)
+set.seed(1)
+dat=data.frame(x=x,y=as.factor(y))
+tune.out=tune(svm,y~.,data=dat,kernel="radial",ranges=list(cost=c(0.1,1,10,100),gamma=c(0.5,1,2,3)))
+summary(tune.out)
+
+
+
+
+library(kernlab)
+set.seed(1)
+x = as.matrix(auto[,2:8])
+y=as.matrix(auto[,10])
+for (degree in c(2,3,4)) {
+  for (Cost in c(1,10,50)) {
+    svp <- ksvm(x,y, type = "C-svc", kernel = "polydot", cross = 10, C = Cost,kpar=list(degree=degree))
+    CV.error=data.frame(Cost,degree,cross(svp))
+    print(CV.error) 
+  }
+}
+
+
