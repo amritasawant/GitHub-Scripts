@@ -1,0 +1,35 @@
+regfit=regsubsets(Y~.,data=train,nvmax=20)
+train.mse=rep(NA,20)
+for (i in 1:20){coefi=coef(regfit,id=i)
+                pred=train.mat[,names(coefi)]%*%coefi
+                train.mse[i]=mean((train$Y-pred)^2)
+}
+train.mse
+
+(d)
+test.mse=rep(NA,20)
+for (i in 1:20){coefi=coef(regfit,id=i)
+                pred=test.mat[,names(coefi)]%*%coefi
+                test.mse[i]=mean((test$Y-pred)^2)
+}
+test.mse
+which.min(test.mse)
+coef(regfit,5)
+
+sq_diffs <- sapply(1:20,function(r){
+  coefi<-coef(regfit,id=r)
+  ncoefi<-names(coefi)
+  beta.est <- sapply(1:20,function(i){
+    id<-sprintf("X%d",i)
+
+    if(id %in% names(coefi)){
+      return(coefi[id])
+    }else{
+      return(0)
+    }
+  })
+  return(sqrt(sum((beta-beta.est)^2)))
+})
+
+plot(seq(1:20),sq_diffs ,xlab="Number of Features",
+     ylab="Sq Root Squared Diff Of Betas")
