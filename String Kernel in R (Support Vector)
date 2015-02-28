@@ -1,0 +1,22 @@
+### compare various string kernels to predict the Topic of the article using the information in the articles.
+
+    library(kernlab)
+    library(openNLP)
+    data(reuters) 
+    y <- rlabels ##response, which indicates the topic of the article, 'acquisitions' or 'crude oil'
+    x <- reuters ##list of articles from the Reuters agency
+    
+    ##The spectrum kernel is equivalent to using a very long vector of features, 
+    ##which count for every possible string and the number of times that the string appears in the article.
+    sk <- stringdot(type="spectrum", length=2, normalized=TRUE)
+    
+    set.seed(1) CV.error=numeric(0)
+    L=numeric(0) for (l in c(seq(1, 25, by=1))){ sk <- stringdot(type="spectrum", length=l, normalized=TRUE) 
+    svp <- ksvm(x,y,kernel=sk,scale=c(),cross=5) 
+    #CV.error=data.frame(l,cross(svp)) 
+    CV.error=c(CV.error,cross(svp)) L=c(L,l) 
+    #print(CV.error) } 
+    CV.error 
+    
+    
+    
