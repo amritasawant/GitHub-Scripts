@@ -1,0 +1,58 @@
+
+##Amazon Employee Challenge Dataset (Kaggle)
+
+
+library(Matrix)
+library(glmnet)
+
+
+test <- read.csv("C:/Amrita/R Programming/Kaggle_Shiny_R/test.csv", header=TRUE,colClasses = c("integer", rep("factor", 9)))
+train <- read.csv("C:/Amrita/R Programming/Kaggle_Shiny_R/train.csv", header=TRUE,colClasses = c("numeric", rep("factor", 9)))
+all <- rbind(train[,-1],test[,-1])
+
+# Create dummy coding for category data
+dummy_cat<-function(column_name, column){
+  idx <- sort(unique(column))
+  dummy = mat.or.vec(length(column),length(idx))
+  for (j in 1:length(idx)) {
+    dummy[,j] <- as.integer(column == idx[j])
+  }
+  colnames(dummy) <- gsub("[ ]", "_", paste(column_name, idx, sep="_"))
+  return(dummy)
+}
+
+replace_col_with_dummy <-function(dataframe, column_name){
+  dataframe <- cbind(dummy_cat(column_name, dataframe[, column_name]), dataframe[, !(names(dataframe)  %in% c(column_name))])
+  return(dataframe)
+}
+
+mydf_all <- replace_col_with_dummy(all, 'ROLE_ROLLUP_1')
+mydf_all <- replace_col_with_dummy(mydf_all, 'ROLE_ROLLUP_2')
+
+
+df_all <- subset(mydf_all, select=-c(RESOURCE,MGR_ID,ROLE_DEPTNAME,ROLE_TITLE,ROLE_FAMILY_DESC,ROLE_FAMILY,ROLE_CODE))
+
+##Sparse Matrix Creation
+sx=sparse.model.matrix(~ . -1, data = df_all)
+x_train = sx[1:nrow(train),]
+x_test <- sx[(nrow(train)+1):nrow(sx),]
+
+#x_all = sparse.model.matrix(~ . -1, data = rbind(train[,-1],test[,-1]))
+#x_train = x_all[1:nrow(train),]
+#x_test <- x_all[(nrow(train)+1):nrow(x_all),]
+
+
+set.seed(1)
+grid=10^seq(10,-2,length=100)
+lasso.mod=cv.glmnet(x = x_train, y = train$ACTION,alpha=1,family="binomial",lambda=grid)
+
+----> Test Lasso model
+
+bestlam=lasso.mod$lambda.min
+lasso.coef=coef(lasso.mod)[,1]
+which(coef(lasso.mod)[,10] != 0) 
+lasso.pred=predict(lasso.mod,s=bestlam,newx=x_test,type.measure="response")
+max(lasso.mod$cvm)
+
+
+
