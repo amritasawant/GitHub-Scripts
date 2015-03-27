@@ -1,0 +1,60 @@
+import re
+import pandas as pd
+import xlrd
+import glob
+
+df=pd.DataFrame()
+##Read bunch of .xls files from folder
+folder = pd.Series(glob.glob("C:/Demand_Planning/*info*"))
+
+##Parsing begins below 
+for i in range(folder.size):
+    sheet_name=folder[folder.index[i]]
+    m=re.search("([0-9]{4}\.[0-9]{2}\.[0-9]{2})",sheet_name)
+    period=m.group(0)
+    
+    workbook=pd.ExcelFile(sheet_name)
+    xls = xlrd.open_workbook(sheet_name)
+    ws = pd.Series(xls.sheet_names())
+    ws=ws[5:]
+    for i in range(ws.size):
+        sheet_name=ws[ws.index[i]]
+        df1 = workbook.parse(sheet_name, parse_cols=[0,1,2,3], skiprows=212, index_col=None, na_values=['NA'])
+        df2 = workbook.parse(sheet_name, parse_cols=[4,5,6,7,8,9,10,11,12,13,14], skiprows=213, index_col=None, na_values=['NA'])
+        df2 = df2.shift(periods=1)
+        df1 = df1.drop(df1.index[[0]])
+        df_all = df1.join(df2,how="outer")
+        df_all['FileMonth']=period
+        df=df.append(df_all)
+
+df['FileMonth'][df['FileMonth'] == '2015.03.31'] = 'FY15Q3M2'
+
+df = df.rename(columns={'Production + Redundancy VMs': 'Flavor',
+'FY14 Q4':'FY14_Q4','FY15 Q1':'FY15_Q1','FY15 Q2':'FY15_Q2','FY15 Q3':'FY15_Q3','FY15 Q4':'FY15_Q4',
+'FY16 Q1':'FY16_Q1','FY16 Q2':'FY16_Q2','FY16 Q3':'FY16_Q3','FY16 Q4':'FY16_Q4',
+'FY17 Q1':'FY17_Q1'
+})
+df = pd.melt(df,id_vars=['Tenant','Site','Env','Combo','Flavor','FileMonth'],
+                  value_vars=['FY14_Q4','FY15_Q1','FY15_Q2',
+                               'FY15_Q3','FY15_Q4','FY16_Q1','FY16_Q2','FY16_Q3',
+                                'FY16_Q4','FY17_Q1'])
+
+df= df.rename(columns={'variable':'Fiscal_Qtr','value':'VM_Forecast'})
+
+
+df.loc[(df["Fiscal_Qtr"] == 'FY15_Q3') & (df["Site"] == 'us-texas-1') & (df["Flavor"]=='GP2-Medium')]
+
+
+df['Region']=''
+df.loc[df['Site'].isin(['us-texas-1','us-internal-1','us-texas-3']),'Region']='Allen,TX'
+df.loc[df['Site'].isin(['us-rdu-1']),'Region']='Raleigh, NC'
+df.loc[df['Site'].isin(['us-virginia-1']),'Region']='Virginia, Va (Asburn)'
+df.loc[df['Site'].isin(['eu-london-1']),'Region']='London, UK'
+df.loc[df['Site'].isin(['eu-amsterdam-1']),'Region']='Amsterdam, NH'
+df.loc[df['Site'].isin(['ap-tokyo-1']),'Region']='Tokyo, JP'
+df.loc[df['Site'].isin(['au-mel-1']),'Region']='Melbourne, AUS'
+df.loc[df['Site'].isin(['DT']),'Region']='DT'
+
+df=df.fillna('')
+
+##Next Step: Write the file into MySql
